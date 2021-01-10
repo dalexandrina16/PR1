@@ -20,6 +20,7 @@ import java.util.Map;
 public class ThreadEntity extends Thread {
 
     private String homeUrl;
+    private int level = 0;
 
     public ThreadEntity(String newUrl) {
         this.homeUrl = newUrl;
@@ -28,6 +29,7 @@ public class ThreadEntity extends Thread {
     @Override
     public void run() {
         super.run();
+        List<String> links = new ArrayList<>();
         try {
             URL connectionUrl = new URL(homeUrl);
             HttpURLConnection httpURLConnection = (HttpURLConnection) connectionUrl.openConnection();
@@ -35,7 +37,6 @@ public class ThreadEntity extends Thread {
             httpURLConnection.setRequestProperty("X-Access-Token", new DataAccessService().getToken());
             httpURLConnection.setConnectTimeout(5000);
             httpURLConnection.connect();
-            List<String> links = new ArrayList<>();
             String url = "http://localhost:5000/";
             String obtained = getFromConnection(httpURLConnection);
             links.addAll(getAllLinks(obtained, url));
@@ -56,6 +57,13 @@ public class ThreadEntity extends Thread {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+        if (!links.isEmpty()) {
+            for (int i = level; i < links.size(); i++) {
+                ThreadEntity localThread = new ThreadEntity(links.get(i));
+                localThread.start();
+                level++;
+            }
         }
     }
 
